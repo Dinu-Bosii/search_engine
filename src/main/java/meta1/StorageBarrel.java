@@ -1,20 +1,17 @@
 package meta1;
-
 //https://gist.github.com/alopes/5358189 //stop words pt
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Properties;
-import java.util.Map.Entry;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -355,8 +352,10 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
             }
         }
     }
-    
-    public ArrayList<String> Search(String s) {
+
+
+
+    public ArrayList<indexObject> Search(String s) {
         // remove stop words
 
         String[] tokens = s.split("[\\s,]+");
@@ -373,51 +372,40 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
                 return new ArrayList<>();
             }
         }
-        ArrayList<String> urls = new ArrayList<>();
+        ArrayList<indexObject> results = new ArrayList<>();
         HashSet<indexObject> set1 = index.get(tokens[0].toLowerCase());
 
-        //deve funcionar sem o if
-        if(tokens.length > 1)
-        {
-            for(indexObject obj1 : set1)
+        for(indexObject obj1 : set1)
             {
-                String currUrl = obj1.getUrl();
-
-                int k = 1;
-                for (int i = 1; i < tokens.length; i++)
+            String currUrl = obj1.getUrl();
+            
+            int k = 1;
+            for (int i = 1; i < tokens.length; i++)
+            {
+                for(indexObject obj2 : index.get(tokens[i].toLowerCase()))
                 {
-                    for(indexObject obj2 : index.get(tokens[i].toLowerCase()))
+                    if((obj2.getUrl().equals(currUrl)))
                     {
-                        if((obj2.getUrl().equals(currUrl)))
-                        {
-                            k++;
-                            break;
-                        }
+                        k++;
+                        break;
                     }
                 }
-                if (k == tokens.length)
-                {
-                    urls.add(currUrl);
-                    urls.add(obj1.getTitulo());
-                    urls.add(obj1.getCitacao());
-                    
-                    
-                }
             }
-
-        }
-
-        else{
-            for (indexObject o : set1)
+            if (k == tokens.length)
             {
-                urls.add(o.getUrl());
-                urls.add(o.getTitulo());
-                urls.add(o.getCitacao());
+                indexObject uObject = new indexObject(currUrl, obj1.getTitulo(), obj1.getCitacao(), urlsIndex.get(currUrl).size());
+                results.add(uObject);
+         
             }
         }
-        return urls;
+        Comparator<indexObject> scoreComparator = Comparator.comparingInt(indexObject::getrelevance).reversed();
+        Collections.sort(results, scoreComparator);
+        return results;
     }
     
+
+
+
     public ArrayList<String> getLinks(String s) 
     {
         ArrayList<String> urls = new ArrayList<>();
@@ -439,5 +427,6 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
         }
         return urls;
     }
+
 }
 

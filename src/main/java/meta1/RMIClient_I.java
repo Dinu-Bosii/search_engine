@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public interface RMIClient_I extends Remote {
     void printOnClient(String information) throws RemoteException;
-    void printResults(ArrayList<String> results) throws RemoteException;
+    void printResults(ArrayList<indexObject> results) throws RemoteException;
 }
 
 

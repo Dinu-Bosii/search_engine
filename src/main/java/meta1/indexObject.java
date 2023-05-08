@@ -4,13 +4,13 @@ public class indexObject {
     String url;
     String titulo;
     String citacao;
-    int ocorrencias;
+    int relevance;
 
-    public indexObject(String url, String titulo, String citacao, int ocorrencias) {
+    public indexObject(String url, String titulo, String citacao, int relevance) {
         this.url = url;
         this.titulo = titulo;
         this.citacao = citacao;
-        this.ocorrencias = ocorrencias;
+        this.relevance = relevance;
     }
 
     public String getUrl() {
@@ -29,12 +29,12 @@ public class indexObject {
         this.citacao = citacao;
     }
 
-    public void setOcorrencias(int ocorrencias) {
-        this.ocorrencias = ocorrencias;
+    public void setrelevance(int relevance) {
+        this.relevance = relevance;
     }
 
-    public void addOcorrencias() {
-        this.ocorrencias += 1;
+    public void addrelevance() {
+        this.relevance += 1;
     }
 
     public String getTitulo() {
@@ -45,7 +45,7 @@ public class indexObject {
         return citacao;
     }
 
-    public int getOcorrencias() {
-        return ocorrencias;
+    public int getrelevance() {
+        return relevance;
     }
 }

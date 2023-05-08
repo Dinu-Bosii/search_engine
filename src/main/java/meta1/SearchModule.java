@@ -1,6 +1,9 @@
 package meta1;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import java.util.Map;
 import java.util.Random;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -26,7 +29,10 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
     private static ArrayList<AliveObject> barrels = new ArrayList<>();
     private static final Random rand = new Random();
     private static final long SLEEP_TIME_ACTIVE = 2000;
-    private static boolean stop = true;
+    private static int PAGE_SIZE = 10;
+    private static int ID = 0;
+
+    Map<Integer, ArrayList<indexObject>> searchResults = new HashMap<>();
 
     protected SearchModule() throws RemoteException {
         super();
@@ -195,9 +201,15 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
     }
 
 
-    public int GoogolSearch(RMIClient_I c, String s) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
+    public int GoogolSearch(RMIClient_I c, String s, int id, int page) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
         // check if there are Barrels active
         c.printOnClient("Searching for: " + s);
+        if (id != 0 && searchResults.containsKey(id)){
+            ArrayList<indexObject> results = (ArrayList<indexObject>) searchResults.get(id).subList(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+            
+            c.printResults(results);
+            return 1;
+        }
         if (!checkBarrels()) {
             System.out.println("No Storage Barrel active. Try again later.");
             c.printOnClient("NO barrels active");
@@ -226,7 +238,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
 
         Registry registry = LocateRegistry.getRegistry(barrelPort);
         StorageBarrel_I brInter = (StorageBarrel_I) registry.lookup("StorageBarrel" + barrelPort);
-        ArrayList<String> results = null;
+        ArrayList<indexObject> results = null;
         try
         {
             results =  brInter.Search(s);
@@ -271,12 +283,13 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
             c.printOnClient("No results found.");
         }
         else{
-            c.printResults(results);
+            searchResults.put(ID++, results);
+            c.printResults( (ArrayList<indexObject>) results.subList(0, 10));
         }
         // print do lado do cliente
         return 1;
     }
-    
+
     
     public int links(RMIClient_I c, String s) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
         // check if there are Barrels active

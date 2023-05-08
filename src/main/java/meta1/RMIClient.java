@@ -215,7 +215,7 @@ public class RMIClient extends UnicastRemoteObject implements RMIClient_I {
 
 						}
 						try{
-							sm.GoogolSearch(c, search);
+							sm.GoogolSearch(c, search, -1, 0);
 						} catch(RemoteException re){
 							connected = false;
 							System.out.println("Lost connection to the server.");
@@ -282,17 +282,15 @@ public class RMIClient extends UnicastRemoteObject implements RMIClient_I {
 		System.out.println(information);
 	}
 
-	public void printResults(ArrayList<String> results) throws java.rmi.RemoteException
+	public void printResults(ArrayList<indexObject> results) throws java.rmi.RemoteException
 	{
-		for(int i = 0; i < results.size(); i+= 3)
+		for(int i = 0; i < results.size(); i++)
 		{
-				String url = results.get(i);
-				System.out.println("URL:" + url);
-				String title = results.get(i+1);
-				System.out.println("Title: " + title);
-			
-				String citation = results.get(i+2);
-				System.out.println("\"" + citation + "...\"");
+				
+				indexObject obj = results.get(i);
+				System.out.println("URL:" + obj.getUrl());
+				System.out.println("Title: " + obj.getTitulo());
+				System.out.println("\"" + obj.getCitacao() + "...\"");
 			
 		}
 	}
