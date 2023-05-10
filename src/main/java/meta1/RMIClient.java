@@ -12,7 +12,7 @@ import java.net.MalformedURLException;
 
 public class RMIClient extends UnicastRemoteObject implements RMIClient_I {
 	// estrutura de dados
-	RMIClient() throws RemoteException {
+	public RMIClient() throws RemoteException {
 		super();
 	}
 
