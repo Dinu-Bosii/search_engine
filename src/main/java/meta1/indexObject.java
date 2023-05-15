@@ -1,6 +1,8 @@
 package meta1;
 
-public class indexObject {
+import java.io.Serializable;
+
+public class indexObject implements Serializable{
     String url;
     String titulo;
     String citacao;

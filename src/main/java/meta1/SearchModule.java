@@ -47,7 +47,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
         SearchModule.CheckIfActive th2 = s1.new CheckIfActive(barrels, MULTICAST_BARREL, PORT_b);
         new Thread(th1).start();
         new Thread(th2).start();
-
     }
 
     public boolean indexURL(String s) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
@@ -201,19 +200,19 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
     }
 
 
-    public int GoogolSearch(RMIClient_I c, String s, int id, int page) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
+    public ArrayList<indexObject> GoogolSearch(RMIClient_I c, String s, int id, int page) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
         // check if there are Barrels active
         c.printOnClient("Searching for: " + s);
         if (id != 0 && searchResults.containsKey(id)){
             ArrayList<indexObject> results = (ArrayList<indexObject>) searchResults.get(id).subList(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
             
             c.printResults(results);
-            return 1;
+            return results;
         }
         if (!checkBarrels()) {
             System.out.println("No Storage Barrel active. Try again later.");
             c.printOnClient("NO barrels active");
-            return 0;
+            return null;
         }
         int max = barrels.size();
         
@@ -274,7 +273,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
             e2.printStackTrace();
             c.printOnClient("Error while searching.");
         }
-
+        ArrayList<indexObject> results_10 = null;
         if(results == null)
         {
             c.printOnClient("not indexed");
@@ -284,10 +283,11 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
         }
         else{
             searchResults.put(ID++, results);
-            c.printResults( (ArrayList<indexObject>) results.subList(0, 10));
+            results_10 = (ArrayList<indexObject>) results.subList(0, 10);
+            c.printResults(results_10);
         }
         // print do lado do cliente
-        return 1;
+        return results_10;
     }
 
     

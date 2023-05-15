@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head> 
+    <title>Getting Started: A table</title> 
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            background-color: #f2f2f2;
+            display: flex;
+            flex-direction: column;
+        }
+        .search-query {
+            padding: 8px;
+            background-color: #f2f2f2;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+        }
+        .url, .title, .citation {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .menu {
+            padding: 10px;
+        }
+        .menu ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+        }
+
+        .menu li {
+            margin-right: 10px;
+        }
+
+        .menu li a {
+            text-decoration: none;
+            color: #fff;
+            padding: 4px;
+            border-radius: 4px;
+            background-color: black;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s ease;
+        }
+
+        .menu li a:hover {
+            background-color: #ddd;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: auto;
+            margin-bottom: 20px; 
+        }
+    
+        .pagination a {
+            padding: 6px 10px;
+            margin: 0 4px;
+            background-color: #f2f2f2;
+            border: 1px solid #ccc;
+            text-decoration: none;
+            color: #333;
+        }
+    
+        .pagination a.active {
+            background-color: #4285f4;
+            color: #fff;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="menu">
+        <ul>
+            <li><a href="home">Home</a></li>
+            <li><a href="index">Index a Url</a></li>
+            <li><a href="#">Administration page</a></li>
+            <li><a href="#">Pages that link to a Url</a></li>
+    </ul>
+    </div>
+    <div class="search-query" th:text="'Searching for: ' + ${query}"></div>
+    <table>
+        <thead>
+            <!-- Table header here if needed -->
+        </thead>
+        <tbody>
+            <tr th:each="indexObject, iStat : ${urls}" th:style="${iStat.odd}? 'font-weight: bold;'">
+                <td class="url" th:text="'URL: ' + ${indexObject.url}"></td>
+                <td class="title" th:text="'Title: ' + ${indexObject.titulo}"></td>
+                <td class="citation" th:text="'Citation: ' + ${indexObject.citacao}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(urls)}">
+                <td colspan="3" style="text-align: center;">No results found</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="pagination">
+        <a href="Prev">Previous Page</a>
+        <a href="#" th:text="${currentPage}"></a>
+        <a href="Next">Next Page</a>
+        <!-- Add more pages as needed -->
+    </div>
+</body>
+</html>
