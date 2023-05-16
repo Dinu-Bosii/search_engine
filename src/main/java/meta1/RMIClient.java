@@ -149,8 +149,8 @@ public class RMIClient extends UnicastRemoteObject implements RMIClient_I {
 						}
 						break;
 					case "2": //Stats
-						try{
-							sm.info(c);
+						/*try{
+							SearchModule_I.info();
 						} catch(RemoteException re){
 							connected = false;
 							System.out.println("Lost connection to the server.");
@@ -159,7 +159,7 @@ public class RMIClient extends UnicastRemoteObject implements RMIClient_I {
 						{
 							//e.printStackTrace();
 							System.out.println("Error retrieving stats.");
-						}
+						}*/
 						break;
 					case "3": //register
 						System.out.println("Username: ");
@@ -231,7 +231,7 @@ public class RMIClient extends UnicastRemoteObject implements RMIClient_I {
 							String urlForLinks = (String) reader.readLine();
 							
 							try{
-								sm.links(c, urlForLinks);
+								sm.links(urlForLinks);
 							} catch(RemoteException re){
 								connected = false;
 								System.out.println("Lost connection to the server.");

@@ -1,0 +1,104 @@
+body, html {
+  height: 100%;
+  margin: 0;
+  background-color: #f2f2f2;
+  display: flex;
+  flex-direction: column;
+}
+.search-query {
+  padding: 8px;
+  background-color: #f2f2f2;
+  border: 1px solid #ccc;
+  margin-top: 10px;
+}
+.url, .title, .citation {
+  display: block;
+  margin-bottom: 10px;
+}
+.menu {
+  padding: 10px;
+}
+.menu ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+}
+
+.menu li {
+  margin-right: 10px;
+}
+
+.menu li a {
+  text-decoration: none;
+  color: #fff;
+  padding: 4px;
+  border-radius: 4px;
+  background-color: black;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.3s ease;
+}
+
+.menu li a:hover {
+  background-color: #ddd;
+}
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: auto;
+  margin-bottom: 20px; 
+}
+
+.pagination a {
+  padding: 6px 10px;
+  margin: 0 4px;
+  background-color: #f2f2f2;
+  border: 1px solid #ccc;
+  text-decoration: none;
+  color: #333;
+}
+
+.pagination a.active {
+  background-color: #4285f4;
+  color: #fff;
+}
+table {
+width: 100%;
+border-collapse: collapse;
+}
+
+td {
+padding: 10px;
+border-bottom: 1px solid #ccc;
+}
+
+tr.even-row {
+background-color: #f9f9f9;
+}
+
+td.url-block {
+width: 30%;
+}
+
+td.title-block {
+width: 40%;
+}
+
+td.citation-block {
+width: 30%;
+}
+
+span.label {
+font-weight: bold;
+}
+
+span.value {
+display: block;
+}
+
+td.no-results {
+text-align: center;
+font-style: italic;
+color: #888;
+}

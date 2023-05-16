@@ -351,7 +351,6 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
     }
 
 
-
     public ArrayList<indexObject> Search(String s) {
         // remove stop words
 
@@ -402,8 +401,6 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
     }
     
 
-
-
     public ArrayList<String> getLinks(String s) 
     {
         ArrayList<String> urls = new ArrayList<>();
@@ -416,7 +413,7 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
             System.out.println("Could not retrieve links.");
         }
         if(set1.isEmpty()){
-            return new ArrayList<>();
+            return urls;
         }
         else{
             for (String u : set1){

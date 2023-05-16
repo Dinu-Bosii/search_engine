@@ -9,13 +9,13 @@
     <div class="menu">
         <ul>
             <li><a href="/">Home</a></li>
-            <li><a href="/indexUrlPage">Index a Url</a></li>
+            <li><a href="/indexUrl">Index a Url</a></li>
             <li><a href="#">Administration page</a></li>
         </ul>
     </div>
     <div class="search-box">
         <div class="logo">GOOGOL</div>
-        <form th:action="@{/search/{page}(page=0)}" method="get" onsubmit="return validateForm(event)">
+        <form th:action="@{/indexUrl}" method="get" onsubmit="return validateForm()">
             <input type="text" name="text" placeholder="Search..." />
             <input type="submit" value="Search" />
         </form>
@@ -32,7 +32,7 @@
             alert('Please enter a search query.');
         }
     }
-
+    
 </script>
 </body>
 </html>

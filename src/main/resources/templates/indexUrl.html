@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Thymeleaf Template</title>
-    <link th:href="@{/main.css}" rel="stylesheet" />
+    <link th:href="@{/searchStyle.css}" rel="stylesheet" />
 </head>
 <body>
 <div class="container">
@@ -15,7 +15,7 @@
     </div>
     <div class="search-box">
         <div class="logo">GOOGOL</div>
-        <form th:action="@{/search/{page}(page=0)}" method="get" onsubmit="return validateForm(event)">
+        <form th:action="@{/indexUrl}" method="get" onsubmit="return validateForm()">
             <input type="text" name="text" placeholder="Search..." />
             <input type="submit" value="Search" />
         </form>
@@ -24,15 +24,5 @@
         <button>Login</button>
     </div>
 </div>
-<script>
-    function validateForm(event) {
-        var searchInput = document.getElementsByName('text')[0];
-        if (searchInput.value.trim() === '') {
-            event.preventDefault();
-            alert('Please enter a search query.');
-        }
-    }
-
-</script>
 </body>
 </html>

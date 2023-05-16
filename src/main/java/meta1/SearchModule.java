@@ -1,10 +1,15 @@
 package meta1;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
@@ -17,6 +22,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+
+import com.example.demo.AdminObject;
 
 public class SearchModule extends UnicastRemoteObject implements SearchModule_I {
     static ArrayList<RMIClient_I> clients = new ArrayList<>(); // para vários clientes
@@ -31,8 +38,12 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
     private static final long SLEEP_TIME_ACTIVE = 2000;
     private static int PAGE_SIZE = 10;
     private static int ID = 0;
+    private static final long SLEEP = 5000;
+    private static AdminObject currentStats;
+    @Autowired
+    private static SimpMessagingTemplate messagingTemplate;
+    static Map<String, Integer> Searches = new HashMap<>();
 
-    Map<Integer, ArrayList<indexObject>> searchResults = new HashMap<>();
 
     protected SearchModule() throws RemoteException {
         super();
@@ -43,10 +54,38 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
         LocateRegistry.createRegistry(4040).rebind("sm", sm);
         System.out.println("Search Module Server ready.");
         SearchModule s1 = new SearchModule();
+
         SearchModule.CheckIfActive th1 = s1.new CheckIfActive(downloaders, MULTICAST_DOWN, PORT_d);
         SearchModule.CheckIfActive th2 = s1.new CheckIfActive(barrels, MULTICAST_BARREL, PORT_b);
         new Thread(th1).start();
         new Thread(th2).start();
+        try {
+            currentStats = info();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        Runnable run = () -> {
+            try{    
+                while (true) {
+                    AdminObject checkStats = info();
+                    if (currentStats != checkStats){
+                        currentStats = checkStats;
+                        //send to Websocket
+                        messagingTemplate.convertAndSend("/topic/adminStats", currentStats);
+                    }
+                    Thread.sleep(SLEEP);
+                }
+            }
+            catch (InterruptedException e) {
+                System.out.println(e.getMessage());
+                //e.printStackTrace();
+            } finally {
+                Thread.currentThread().interrupt();
+            }
+
+        };
+        new Thread(run).start();
     }
 
     public boolean indexURL(String s) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
@@ -154,48 +193,35 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
         }
 
     }
-    
-    /*public class PeriodicCheck implements Runnable
-    {
-        
-        @Override
-        public synchronized void run() 
-        {
-            while(true)
-            {
-                checkBarrels();
-                checkDownloaders();
-                //checkTop10();
-                stop = true;
-                try {
-                    Thread.sleep(20000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt(); 
-                    System.err.println("PeriodicCheck Interrupted");
-                    //e.printStackTrace();
-                }
-            }
-        }
-    }*/
 
 
-    public void  info(RMIClient_I c) throws RemoteException, MalformedURLException, NotBoundException {
+    public static AdminObject info() {
         //subscribe the client
-        clients.add(c);
+
+        //----------------------------------Obter Top 10 pesquisas
+        List<Map.Entry<String, Integer>> topSearches = new ArrayList<>(Searches.entrySet());
+        Collections.sort(topSearches, (e1, e2) -> e2.getValue().compareTo(e1.getValue()));
+        List<Map.Entry<String, Integer>> top10Searches = topSearches.subList(0, Math.min(10, topSearches.size()));
+        List<String> top10Admin = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : top10Searches) {
+            top10Admin.add(entry.getKey());
+        }
+
         checkBarrels();
         checkDownloaders();
-        int num_down = downloaders.size();
-        c.printOnClient("Active Downloaders: " + num_down);
+        
+        ArrayList<String> adminDownloaders = new ArrayList<>();
+        ArrayList<String> adminBarrels = new ArrayList<>();
         for(AliveObject d : downloaders)
         {
-            c.printOnClient("IP:" + d.getIp() + "|PORT:" + d.getPort());
+            adminDownloaders.add("IP:" + d.getIp() + "|PORT:" + d.getPort());
         }
-        int num_barrels = barrels.size();
-        c.printOnClient("Active Barrels: " + num_barrels);
         for(AliveObject b : barrels)
         {
-            c.printOnClient("IP:" + b.getIp() + "|PORT:" + b.getPort());
+            adminBarrels.add("IP:" + b.getIp() + "|PORT:" + b.getPort());
         }
+
+        return new AdminObject(top10Admin, adminBarrels, adminDownloaders);
         
     }
 
@@ -203,7 +229,8 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
     public ArrayList<indexObject> GoogolSearch(String s, int id, int page) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
         // check if there are Barrels active
         System.out.println("Searching for: " + s);
-        if (id != 0 && searchResults.containsKey(id)){
+        
+        /*if (id != 0 && searchResults.containsKey(id)){
             if (searchResults.get(id).size() >= 10) {
                 return new ArrayList<indexObject>(searchResults.get(id).subList(page * PAGE_SIZE, (page + 1) * PAGE_SIZE));
             } else {
@@ -211,7 +238,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
             }
             //return new ArrayList<indexObject>(searchResults.get(id).subList(page * PAGE_SIZE, (page + 1) * PAGE_SIZE));
             
-        }
+        }*/
         if (!checkBarrels()) {
             System.out.println("No Storage Barrel active. Try again later.");
             return null;
@@ -283,28 +310,23 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
         else if(results.isEmpty()){
             System.out.println("No results found.");
         }
-        else{
-            searchResults.put(ID++, results);
-            
-            if (results.size() >= 10) {
-                results_10 = new ArrayList<indexObject>(results.subList(0, 10));
-            } else {
-                results_10 = new ArrayList<indexObject>(results);
-            }
-            System.out.println("Found results: " + searchResults.size());
+        else{     
+
+            results_10 = new ArrayList<indexObject>(results.subList(0, Math.min(10, results.size())));
+
+            System.out.println("Found results: " + results.size());
         }
         // print do lado do cliente
         return results_10;
     }
 
     
-    public int links(RMIClient_I c, String s) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
+    public ArrayList<String> links(String s) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
         // check if there are Barrels active
-        c.printOnClient("Searching links for...");
+        System.out.println("Searching links for...");
         if (!checkBarrels()) {
             System.out.println("No Storage Barrel active. Try again later.");
-            c.printOnClient("NO barrels active");
-            return 0;
+            return new ArrayList<>();
         }
         int max = barrels.size();
         
@@ -339,22 +361,24 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
         catch (Exception e2)
         {
             e2.printStackTrace();
-            c.printOnClient("Error while searching.");
+            System.out.println("Error while searching.");
         }
+        /*/
         if(results.isEmpty())
         {
-            return 0;
+            return new ArrayList<>();;
         }
         else{
             for(String st : results){
                 c.printOnClient("url:" + st);
             }
-        }
-        return 1;
+        }*/
+
+        return results;
     }
 
 
-    public boolean checkBarrels() {
+    public static boolean checkBarrels() {
         boolean flag = false;
         ArrayList<AliveObject> toRemove = new ArrayList<>();
         for (AliveObject obj : barrels) {
@@ -380,7 +404,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
     }
     
 
-    public boolean checkDownloaders() {
+    public static boolean checkDownloaders() {
         boolean flag = false;
         ArrayList<AliveObject> toRemove = new ArrayList<>();
         for (AliveObject obj : downloaders) {
