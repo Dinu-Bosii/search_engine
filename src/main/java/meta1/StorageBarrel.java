@@ -41,7 +41,7 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
         else{
             portArg = Integer.parseInt(args[0]);
         }
-        File file = new File(System.getProperty("user.dir") + "\\SD2023\\src\\meta1\\stopwords.txt");
+        File file = new File(System.getProperty("user.dir") + "\\search_engine\\src\\main\\java\\meta1\\stopwords.txt");
         try(BufferedReader br = new BufferedReader(new FileReader(file)))
         {
             String st;
@@ -249,9 +249,6 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
                                     else{
                                         HashSet<String> set1 = new HashSet<>();
                                         set1.add(aux.getUrl());
-                                        if(u.equals("https://docs.oracle.com/en/java/javase/20/language/java-language-changes.html")){
-                                            System.out.println("IM HERE");
-                                        }
                                         urlsIndex.put(u, set1);
                                     }
                                     
@@ -359,7 +356,7 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
         // remove stop words
 
         String[] tokens = s.split("[\\s,]+");
- 
+        ArrayList<indexObject> results = new ArrayList<>();
         for(var word: tokens)
         {
             
@@ -369,10 +366,10 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
                 //System.out.println(index.keySet());
 
 
-                return new ArrayList<>();
+                return results;
             }
         }
-        ArrayList<indexObject> results = new ArrayList<>();
+        ;
         HashSet<indexObject> set1 = index.get(tokens[0].toLowerCase());
 
         for(indexObject obj1 : set1)
@@ -400,6 +397,7 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
         }
         Comparator<indexObject> scoreComparator = Comparator.comparingInt(indexObject::getrelevance).reversed();
         Collections.sort(results, scoreComparator);
+        System.out.println("Found results: " + results.size());
         return results;
     }
     

@@ -215,7 +215,7 @@ public class RMIClient extends UnicastRemoteObject implements RMIClient_I {
 
 						}
 						try{
-							sm.GoogolSearch(c, search, -1, 0);
+							sm.GoogolSearch(search, -1, 0);
 						} catch(RemoteException re){
 							connected = false;
 							System.out.println("Lost connection to the server.");

@@ -19,8 +19,7 @@ public class URLQueue extends UnicastRemoteObject implements InterfaceRMI {
         URLQueue q = new URLQueue();
         LocateRegistry.createRegistry(1099).rebind("queue", q);
         System.out.println("URLQueue ready.");
-        //queue.add("https://jsoup.org/cookbook/introduction/");
-        //queue.add("https://pt.wikipedia.org/wiki/Brasil");
+        queue.add("https://jsoup.org/cookbook/introduction/");
         ArrayList<Thread> ths = new ArrayList<Thread>();
         for (int i = 0; i < 3; i++)
         {

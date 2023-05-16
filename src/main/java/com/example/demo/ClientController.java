@@ -19,6 +19,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
+import java.util.List;
 
 import meta1.RMIClient;
 import meta1.RMIClient_I;
@@ -28,42 +29,44 @@ import meta1.indexObject;
 @Controller
 public class ClientController {
     private SearchModule_I sm = null;
-    RMIClient_I c = null;
     public ClientController() throws RemoteException {
         super();
     }
 
     @GetMapping("/")
     public String HomePage() {
-        
         return "home";
     }
 
-    @GetMapping("/hello")
-    public String Hello(Model model) {
-        //String message = "Welcome to my application!";
-        //model.addAttribute("greeting", message);
-        return "hello";
-    }
 
     @GetMapping("/search/{page}")
-    public String Search(@RequestParam(required=true) String text, @RequestParam(defaultValue = "-1") int id,@PathVariable("page") int page, Model model) throws NotBoundException, RemoteException, MalformedURLException {
+    public String Search(@RequestParam(defaultValue = "hello, World") String text, 
+                         @PathVariable("page") String page, Model model) 
+                         throws NotBoundException, RemoteException, MalformedURLException {
         Registry registry;
         
         try{
-            c = new RMIClient();
             registry = LocateRegistry.getRegistry(4040);
             sm = (SearchModule_I) registry.lookup("sm");
-            System.out.println("Connected to Search Module succesfully.");
-            ArrayList<indexObject> results = sm.GoogolSearch(c, text, id, page);
-            model.addAttribute("urls", results);
-            model.addAttribute("currentPage", page);
         }
         catch ( Exception e)
          {
             System.out.println("Could not connect to Search Module.");
-            return "redirect:home";
+            return "redirect:/";
         }
+
+        try{
+            List<indexObject> results = sm.GoogolSearch(text, -1, Integer.parseInt(page));
+            model.addAttribute("urls", results);
+            model.addAttribute("currentPage", page);
+            model.addAttribute("query", text);
+        }
+        catch (Exception e)
+        {
+           //e.printStackTrace();
+           System.out.println(e.getLocalizedMessage());
+           return "redirect:/";
+       }
         return "search";
     }
 
@@ -72,7 +75,6 @@ public class ClientController {
         Registry registry;
         
         try{ //fazer dentro do search()
-            c = new RMIClient();
             registry = LocateRegistry.getRegistry(4040);
             sm = (SearchModule_I) registry.lookup("sm");
         }

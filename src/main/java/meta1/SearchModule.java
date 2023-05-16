@@ -200,18 +200,20 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
     }
 
 
-    public ArrayList<indexObject> GoogolSearch(RMIClient_I c, String s, int id, int page) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
+    public ArrayList<indexObject> GoogolSearch(String s, int id, int page) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
         // check if there are Barrels active
-        c.printOnClient("Searching for: " + s);
+        System.out.println("Searching for: " + s);
         if (id != 0 && searchResults.containsKey(id)){
-            ArrayList<indexObject> results = (ArrayList<indexObject>) searchResults.get(id).subList(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+            if (searchResults.get(id).size() >= 10) {
+                return new ArrayList<indexObject>(searchResults.get(id).subList(page * PAGE_SIZE, (page + 1) * PAGE_SIZE));
+            } else {
+               return new ArrayList<indexObject>(searchResults.get(id));
+            }
+            //return new ArrayList<indexObject>(searchResults.get(id).subList(page * PAGE_SIZE, (page + 1) * PAGE_SIZE));
             
-            c.printResults(results);
-            return results;
         }
         if (!checkBarrels()) {
             System.out.println("No Storage Barrel active. Try again later.");
-            c.printOnClient("NO barrels active");
             return null;
         }
         int max = barrels.size();
@@ -271,20 +273,25 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
         catch (Exception e2)
         {
             e2.printStackTrace();
-            c.printOnClient("Error while searching.");
+            System.out.println("Error while searching.");
         }
-        ArrayList<indexObject> results_10 = null;
+        ArrayList<indexObject> results_10 = new ArrayList<>();
         if(results == null)
         {
-            c.printOnClient("not indexed");
+            System.out.println("not indexed");
         }
         else if(results.isEmpty()){
-            c.printOnClient("No results found.");
+            System.out.println("No results found.");
         }
         else{
             searchResults.put(ID++, results);
-            results_10 = (ArrayList<indexObject>) results.subList(0, 10);
-            c.printResults(results_10);
+            
+            if (results.size() >= 10) {
+                results_10 = new ArrayList<indexObject>(results.subList(0, 10));
+            } else {
+                results_10 = new ArrayList<indexObject>(results);
+            }
+            System.out.println("Found results: " + searchResults.size());
         }
         // print do lado do cliente
         return results_10;

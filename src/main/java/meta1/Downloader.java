@@ -220,7 +220,7 @@ public class Downloader extends Thread {
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    System.out.println("ERROR HERE");
+                    System.out.println(e.getMessage());
                 }
 
             }

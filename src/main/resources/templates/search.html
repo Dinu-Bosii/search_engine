@@ -69,14 +69,53 @@
             background-color: #4285f4;
             color: #fff;
         }
+        table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+tr.even-row {
+  background-color: #f9f9f9;
+}
+
+td.url-block {
+  width: 30%;
+}
+
+td.title-block {
+  width: 40%;
+}
+
+td.citation-block {
+  width: 30%;
+}
+
+span.label {
+  font-weight: bold;
+}
+
+span.value {
+  display: block;
+}
+
+td.no-results {
+  text-align: center;
+  font-style: italic;
+  color: #888;
+}
 
     </style>
 </head>
 <body>
     <div class="menu">
         <ul>
-            <li><a href="home">Home</a></li>
-            <li><a href="index">Index a Url</a></li>
+            <li><a href="/">Home</a></li>
+            <li><a href="/index">Index a Url</a></li>
             <li><a href="#">Administration page</a></li>
             <li><a href="#">Pages that link to a Url</a></li>
     </ul>
@@ -87,15 +126,26 @@
             <!-- Table header here if needed -->
         </thead>
         <tbody>
-            <tr th:each="indexObject, iStat : ${urls}" th:style="${iStat.odd}? 'font-weight: bold;'">
-                <td class="url" th:text="'URL: ' + ${indexObject.url}"></td>
-                <td class="title" th:text="'Title: ' + ${indexObject.titulo}"></td>
-                <td class="citation" th:text="'Citation: ' + ${indexObject.citacao}"></td>
+            <tr th:each="indexObject, iStat : ${urls}" th:class="${iStat.odd}? 'odd-row' : 'even-row'">
+              <td class="url-block">
+                <span class="label">URL:</span>
+                <span class="value" th:text="${indexObject.url}"></span>
+              </td>
+              <td class="title-block">
+                <span class="label">Title:</span>
+                <span class="value" th:text="${indexObject.titulo}"></span>
+              </td>
+              <td class="citation-block">
+                <span class="label">Citation:</span>
+                <span class="value" th:text="${indexObject.citacao}"></span>
+              </td>
             </tr>
             <tr th:if="${#lists.isEmpty(urls)}">
-                <td colspan="3" style="text-align: center;">No results found</td>
+              <td colspan="3" class="no-results">No results found</td>
             </tr>
-        </tbody>
+          </tbody>
+          
+          
     </table>
     <div class="pagination">
         <a href="Prev">Previous Page</a>
