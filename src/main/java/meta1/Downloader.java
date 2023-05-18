@@ -37,8 +37,8 @@ public class Downloader extends Thread {
 
                 String alive = PORT + ":" + "Downloader";
                 while (true) {
-                    //System.out.println("Sending packets...");
-                    DatagramPacket alivePacket = new DatagramPacket(alive.getBytes(), alive.length(), group, PORT_ALIVE);
+                    DatagramPacket alivePacket = new DatagramPacket(alive.getBytes(), alive.length(), group,
+                            PORT_ALIVE);
                     socketSM.send(alivePacket);
                     Thread.sleep(SLEEP); // esperar 1 segundo
                 }
@@ -61,22 +61,20 @@ public class Downloader extends Thread {
             int id = 0;
 
             while (true) { // keep reading from the url queue
-                if (id == Integer.MAX_VALUE - 1) { id = 0; }
+                if (id == Integer.MAX_VALUE - 1) {
+                    id = 0;
+                }
                 id++;
                 try {
 
                     String url = rmi.getUrl();
-                    //System.out.println("url:" + url);
-                    //System.out.println("queue size is " + rmi.getQueueSize());
+                    // System.out.println("url:" + url);
+                    // System.out.println("queue size is " + rmi.getQueueSize());
                     Document doc;
 
-                    try{
-                     doc = Jsoup.connect(url).get();
-                    }
-                    catch ( Exception e)
-                    {
-                        //add to badUrls? TODO
-                        //System.out.println("bad url: " + url);
+                    try {
+                        doc = Jsoup.connect(url).get();
+                    } catch (Exception e) {
                         continue;
                     }
 
@@ -91,87 +89,84 @@ public class Downloader extends Thread {
                         // System.out.println(link.text() + "\n" + link.attr(abs) + "\n");
                         urls[i++] = link.attr(abs);
                     }
-                    
-                    
-  
+
                     String[] words = new String[tokens.countTokens()];
                     int k = 0;
                     while (tokens.hasMoreTokens()) {
                         String curr = tokens.nextToken();
-                        //if token not in stop words
-                            words[k++] = curr;
+                        // if token not in stop words
+                        words[k++] = curr;
                     }
-                    
+
                     String title = doc.title();
                     String citacao;
                     String text = doc.text();
-                    if(text.length() > 150){
-                        citacao = doc.text().substring(0, 150);   
-                    }
-                    else{
+                    if (text.length() > 150) {
+                        citacao = doc.text().substring(0, 150);
+                    } else {
                         citacao = doc.text().substring(0, text.length());
                     }
 
-                    //type 1 - first packet
-                    //type 2 - urls
-                    //type 3 - words
-                    
-                    int partsUrl = (int) Math.ceil(urls.length / 10.0); //por implementar
+                    // type 1 - first packet
+                    // type 2 - urls
+                    // type 3 - words
+
+                    int partsUrl = (int) Math.ceil(urls.length / 10.0); // por implementar
                     int partUrlAtual = 1;
-                    int partsWords = (int) Math.ceil(words.length / 10.0); 
+                    int partsWords = (int) Math.ceil(words.length / 10.0);
                     int partWordsAtual = 1;
-                    objectMulticast obj = new objectMulticast(id, partsWords, partsUrl, "1", null, null, url, title, citacao);
+                    objectMulticast obj = new objectMulticast(id, partsWords, partsUrl, "1", null, null, url, title,
+                            citacao);
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     ObjectOutputStream oos = new ObjectOutputStream(baos);
                     oos.writeObject(obj);
                     byte[] data = baos.toByteArray();
 
-                    //System.out.println("data size is " + data.length);
                     int PORT_TO_BARREL = 4321;
                     socketBarrel.send(new DatagramPacket(data, data.length, toBarrels, PORT_TO_BARREL));
                     oos.close();
                     baos.close();
 
-                    //---------------------------------------------------------------------------enviar urls
-                    //enviar um número de urls de cada vez por pacote
+                    // ---------------------------------------------------------------------------enviar
+                    // urls
+                    // enviar um número de urls de cada vez por pacote
 
                     int sourcePos = 0;
                     int size2 = 10;
                     int size = size2;
-                    while(sourcePos < urls.length){
-                        if (sourcePos + size2 > urls.length)
-                        {
+                    while (sourcePos < urls.length) {
+                        if (sourcePos + size2 > urls.length) {
                             size = urls.length - sourcePos;
-                            
+
                         }
-                        
+
                         String[] urls_sliced;
                         urls_sliced = Arrays.copyOfRange(urls, sourcePos, sourcePos + size);
 
-                        obj = new objectMulticast(id, partUrlAtual, 0,"2", null, urls_sliced, url, null, null);
+                        obj = new objectMulticast(id, partUrlAtual, 0, "2", null, urls_sliced, url, null, null);
                         baos = new ByteArrayOutputStream();
                         oos = new ObjectOutputStream(baos);
                         oos.writeObject(obj);
-                        data = baos.toByteArray();   
-                        DatagramPacket packetSend = new DatagramPacket(data, data.length, toBarrels, PORT_TO_BARREL);        
-  
+                        data = baos.toByteArray();
+                        DatagramPacket packetSend = new DatagramPacket(data, data.length, toBarrels, PORT_TO_BARREL);
+
                         socketBarrel.send(packetSend);
                         oos.close();
                         baos.close();
 
                         sourcePos += size2;
                         partUrlAtual++;
-            
-                        //System.out.println("data 1size is " + data.length);
+
+                        // System.out.println("data 1size is " + data.length);
                     }
 
-                    //-------------------------------------------------------------------------------enviar words
+                    // -------------------------------------------------------------------------------enviar
+                    // words
                     sourcePos = 0;
-                    
+
                     size = size2;
-                    while(sourcePos < words.length){
-                        if (sourcePos + size2 > words.length)
-                        {
+                    while (sourcePos < words.length) {
+                        if (sourcePos + size2 > words.length) {
                             size = words.length - sourcePos;
 
                         }
@@ -181,40 +176,21 @@ public class Downloader extends Thread {
                         baos = new ByteArrayOutputStream();
                         oos = new ObjectOutputStream(baos);
                         oos.writeObject(obj);
-                        data = baos.toByteArray();                            
+                        data = baos.toByteArray();
                         socketBarrel.send(new DatagramPacket(data, data.length, toBarrels, PORT_TO_BARREL));
                         oos.close();
                         baos.close();
                         sourcePos += size2;
 
-                        //System.out.println("data 2size is " + data.length);
                     }
-                    /*
-                    Runnable  run2 = () -> {
-                        for (String u: urls) 
-                        {
-                            try {
-                                if (!processed.contains(u) && !rmi.checkQueueForUrl(u)) {
-                                    rmi.addUrl(u);
-                                }
 
-                            } catch (RemoteException e) {
-                                //e.printStackTrace();
-                                System.out.println("Could not add to the queue the url:" + u);
-                            }
-                        }
-
-                    };
-                    new Thread(run2).start();*/
-                    for (String u: urls) 
-                    {
+                    for (String u : urls) {
                         try {
                             if (!processed.contains(u) && !rmi.checkQueueForUrl(u)) {
                                 rmi.addUrl(u);
                             }
 
                         } catch (RemoteException e) {
-                            //e.printStackTrace();
                             System.out.println("Could not add to the queue the url:" + u);
                         }
                     }
@@ -229,7 +205,7 @@ public class Downloader extends Thread {
         }
     }
 
- }
+}
 
 // urls de sites que não existem devem ser guardados na mesma
 // numa lista de urls

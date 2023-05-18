@@ -16,16 +16,20 @@
             </div>
             <div class="search-box">
                 <div class="logo">GOOGOL</div>
-                <form th:action="@{/search/{page}(page=0)}" method="get"
+                <form th:action="@{/hackerNewsUserSearch}" method="get"   
                     onsubmit="return validateForm(event)">
-                    <input type="text" name="text" placeholder="Search..." />
-                    <input type="submit" value="Search" />
+                    <!--?????-->
+                    <input type="text" name="user" placeholder="Hacker News User..." />
+                    <input type="submit" value="Submit" />
                 </form>
+            </div>
+            <div class="login-button">
+                <button>Login</button>
             </div>
         </div>
         <script>
     function validateForm(event) {
-        var searchInput = document.getElementsByName('text')[0];
+        var searchInput = document.getElementsByName('user')[0];
         if (searchInput.value.trim() === '') {
             event.preventDefault();
             alert('Please enter a search query.');

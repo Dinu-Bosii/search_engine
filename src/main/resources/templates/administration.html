@@ -1,45 +1,31 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head> 
-    <title>Getting Started: A table</title> 
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <link th:href="@{/searchStyle.css}" rel="stylesheet" />
-    <script>
-      window.addEventListener('load', function () {
-          connect();
-      });
-  </script>
-<body>
-    <div class="menu">
-        <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/index">Index a Url</a></li>
-            <li><a href="/admin">Administration page</a></li>
-    </ul>
-    </div>
-    <div class="search-query" th:text="'Searching for: ' + ${query}"></div>
-    <table>
-        <tbody>
-            <tr th:each="indexObject, iStat : ${urls}" th:class="${iStat.odd}? 'odd-row' : 'even-row'">
-              <td class="url-block">
-                <span class="label">URL:</span>
-                <span class="value" th:text="${indexObject.url}"></span>
-                <a class="view-button" th:href="@{/urlLinks(url=${indexObject.url})}">View</a>
-              
-              </td>
-              <td class="title-block">
-                <span class="label">Title:</span>
-                <span class="value" th:text="${indexObject.titulo}"></span>
-              </td>
-              <td class="citation-block">
-                <span class="label">Citation:</span>
-                <span class="value" th:text="${indexObject.citacao}"></span>
-              </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(urls)}">
-              <td colspan="3" class="no-results">No results found</td>
-            </tr>
-          </tbody>
-    </table>
-</body>
-</html>
+    <head>
+        <title>Administration Page</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <link th:href="@{/searchStyle.css}" rel="stylesheet" />
+        <script src="/webjars/jquery/jquery.min.js"></script>
+        <script src="/webjars/sockjs-client/1.5.1/sockjs.min.js"></script>
+        <script src="/webjars/stomp-websocket/2.3.4/stomp.min.js"></script>
+        <script src="/app.js"></script>
+    </head>
+    <body>
+        <div class="menu">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/indexUrlPage">Index a Url</a></li>
+                <li><a href="/admin">Administration page</a></li>
+                <li><a href="/hackerNewsUser"> Hacker News User's Stories</a></li>
+            </ul>
+        </div>
+
+        <h1>Administration Page</h1>
+        <div id="admin-info">
+            <p>Top 10 Searches: <span id="top10Searches" th:text="${info.top10Searches}"></span></p>
+            <p>Barrels: <span id="barrels" th:text="${info.barrels}"></span></p>
+            <p>Downloaders: <span id="downloaders" th:text="${info.downloaders}"></span></p>
+        </div>
+        
+    </body>
+    </html>
+    

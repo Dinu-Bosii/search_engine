@@ -2,7 +2,7 @@ package meta1;
 
 import java.io.Serializable;
 
-public class indexObject implements Serializable{
+public class indexObject implements Serializable {
     String url;
     String titulo;
     String citacao;

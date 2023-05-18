@@ -1,52 +1,50 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
-<head> 
-    <title>Getting Started: A table</title> 
+<head>
+    <title>Search Results</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link th:href="@{/searchStyle.css}" rel="stylesheet" />
-
+</head>
 <body>
     <div class="menu">
         <ul>
             <li><a href="/">Home</a></li>
-            <li><a href="/indexUrl">Index a Url</a></li>
-            <li><a href="#">Administration page</a></li>
-    </ul>
+            <li><a href="/indexUrlPage">Index a Url</a></li>
+            <li><a href="/admin">Administration page</a></li>
+            <li><a href="/hackerNewsUser">Hacker News User's Stories</a></li>
+        </ul>
     </div>
     <div class="search-query" th:text="'Searching for: ' + ${query}"></div>
+    <form th:action="@{/indexTopStories}" method="get">
+        <input type="hidden" name="query" th:value="${query}" />
+        <input type="submit" value="Index Top Stories" />
+    </form>
     <table>
-        <thead>
-            <!-- Table header here if needed -->
-        </thead>
         <tbody>
-            <tr th:each="indexObject, iStat : ${urls}" th:class="${iStat.odd}? 'odd-row' : 'even-row'">
-              <td class="url-block">
-                <span class="label">URL:</span>
-                <span class="value" th:text="${indexObject.url}"></span>
-                <a class="view-button" th:href="@{/urlLinks(url=${indexObject.url})}">View</a>
-              
-              </td>
-              <td class="title-block">
-                <span class="label">Title:</span>
-                <span class="value" th:text="${indexObject.titulo}"></span>
-              </td>
-              <td class="citation-block">
-                <span class="label">Citation:</span>
-                <span class="value" th:text="${indexObject.citacao}"></span>
-              </td>
+            <tr th:each="indexObject, iStat : ${urls}" th:class="${iStat.odd} ? 'odd-row' : 'even-row'">
+                <td class="url-block">
+                    <span class="label">URL:</span>
+                    <span class="value" th:text="${indexObject.url}"></span>
+                    <a class="view-button" th:href="@{/urlLinks(url=${indexObject.url})}">View Pages linked to this Url</a>
+                </td>
+                <td class="title-block">
+                    <span class="label">Title:</span>
+                    <span class="value" th:text="${indexObject.titulo}"></span>
+                </td>
+                <td class="citation-block">
+                    <span class="label">Citation:</span>
+                    <span class="value" th:text="${indexObject.citacao}"></span>
+                </td>
             </tr>
             <tr th:if="${#lists.isEmpty(urls)}">
-              <td colspan="3" class="no-results">No results found</td>
+                <td colspan="3" class="no-results">No results found</td>
             </tr>
-          </tbody>
-          
-          
+        </tbody>
     </table>
     <div class="pagination">
-        <a href="Prev">Previous Page</a>
+        <a th:href="@{/search/{page}(page=${PrevPage}, text=${query})}">Prev Page</a>
         <a href="#" th:text="${currentPage}"></a>
-        <a href="/search/page${currentPage + 1}">Next Page</a>
-        <!-- Add more pages as needed -->
+        <a th:href="@{/search/{page}(page=${NextPage}, text=${query})}">Next Page</a>
     </div>
 </body>
 </html>

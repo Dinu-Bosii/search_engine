@@ -1,4 +1,5 @@
 package meta1;
+
 //https://gist.github.com/alopes/5358189 //stop words pt
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,80 +20,74 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 
-
 public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_I {
 
     public static HashMap<String, HashSet<indexObject>> index = new HashMap<>();
     public static HashMap<String, HashSet<String>> urlsIndex = new HashMap<>();
     public static HashSet<String> StopWords = new HashSet<>();
 
-    // Creates a Storage Barrel with the ip address
-    public StorageBarrel() throws RemoteException{
+    public StorageBarrel() throws RemoteException {
         super();
     }
 
     public static void main(String[] args) throws IOException {
         int portArg;
-        if(args.length < 1)
-        {
+        if (args.length < 1) {
             System.out.println(" Missing argument {PORT}");
             return;
-        }
-        else{
+        } else {
             portArg = Integer.parseInt(args[0]);
         }
         File file = new File(System.getProperty("user.dir") + "\\search_engine\\src\\main\\java\\meta1\\stopwords.txt");
-        try(BufferedReader br = new BufferedReader(new FileReader(file)))
-        {
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String st;
-            while ((st = br.readLine()) != null)
-            {
-            StopWords.add(st);
+            while ((st = br.readLine()) != null) {
+                StopWords.add(st);
             }
-        } catch ( Exception e) {
+        } catch (Exception e) {
             System.out.println("Error reading stop words");
             return;
         }
-        
-       
+
         Thread t;
-        try{
+        try {
             StorageBarrel barrelInter = new StorageBarrel();
-            LocateRegistry.createRegistry(portArg).rebind("StorageBarrel" + portArg, barrelInter);        
+            LocateRegistry.createRegistry(portArg).rebind("StorageBarrel" + portArg, barrelInter);
             StorageBarrel.SendLifeProof th1 = barrelInter.new SendLifeProof(portArg, "StorageBarrel:" + portArg);
             t = new Thread(th1);
             t.start();
             System.out.println("Storage Barrel ready.");
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println("RMI interface problems");
             return;
         }
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> { 
-			System.out.println("Exiting...");
-                t.interrupt();
-		}));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Exiting...");
+            t.interrupt();
+        }));
 
-        //thread to write the content of the index on a file
-        /*Runnable run = () -> {
-            while(true)
-            {
-                try {
-                    Thread.sleep(20000);
-                    Properties properties = new Properties();
-                    properties.putAll(index);
-
-                    properties.store(new FileOutputStream("Storage.txt"), null);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                    System.out.println("Error writing file");
-                }
-            }
-        };
-        new Thread(run).start();*/
+        // thread to write the content of the index on a file
+        /*
+         * Runnable run = () -> {
+         * while(true)
+         * {
+         * try {
+         * Thread.sleep(20000);
+         * Properties properties = new Properties();
+         * properties.putAll(index);
+         * 
+         * properties.store(new FileOutputStream("Storage.txt"), null);
+         * } catch (InterruptedException e) {
+         * Thread.currentThread().interrupt();
+         * }
+         * catch (Exception e) {
+         * e.printStackTrace();
+         * System.out.println("Error writing file");
+         * }
+         * }
+         * };
+         * new Thread(run).start();
+         */
         //
         receiveMulticast();
 
@@ -102,9 +97,9 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
     public static void receiveMulticast() throws IOException {
         int port = 4321;
         String MULTICAST_ADDRESS = "224.3.2.1";
-        class objectAux 
-        {
-            public objectAux(int id, InetAddress add, int pORT, int wordNum, int urlsNum, String url, String title, String citacao) {
+        class objectAux {
+            public objectAux(int id, InetAddress add, int pORT, int wordNum, int urlsNum, String url, String title,
+                    String citacao) {
                 this.id = id;
                 this.add = add;
                 PORT = pORT;
@@ -113,78 +108,54 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
                 this.url = url;
                 this.citacao = citacao;
                 this.title = title;
-                
+
             }
 
-        int id;
-        InetAddress add;
-        int PORT;
-        int wordNum;
-        int urlsNum;
-        String url;
-        String citacao;
-        String title ;
-        public InetAddress getAdd() {
-            return add;
-        }
-        public int getPORT() {
+            int id;
+            InetAddress add;
+            int PORT;
+            int wordNum;
+            int urlsNum;
+            String url;
+            String citacao;
+            String title;
+
+            public InetAddress getAdd() {
+                return add;
+            }
+
+            public int getPORT() {
                 return PORT;
             }
-        public String getUrl() {
-            return url;
-        }
-        public int getId() {
-            return id;
-        }
-        public void setId(int id) {
-            this.id = id;
-        }
-        public void setAdd(InetAddress add) {
-            this.add = add;
-        }
-        public void setPORT(int pORT) {
-            PORT = pORT;
-        }
-        public int getWordNum() {
-            return wordNum;
-        }
-        public void setWordNum(int wordNum) {
-            this.wordNum = wordNum;
-        }
-        public int getUrlsNum() {
-            return urlsNum;
+
+            public String getUrl() {
+                return url;
             }
-        public void setUrlsNum(int urlsNum) {
-            this.urlsNum = urlsNum;
+
+            public int getId() {
+                return id;
+            }
+
+            public String getCitacao() {
+                return citacao;
+            }
+
+            public String getTitle() {
+                return title;
+            }
+
         }
-        public void setUrl(String url) {
-            this.url = url;
-        }
-        public String getCitacao() {
-            return citacao;
-        }
-        public void setCitacao(String citacao) {
-            this.citacao = citacao;
-        }
-        public String getTitle() {
-            return title;
-        }
-        public void setTitle(String title) {
-            this.title = title;
-        }
-    }
-        
+
         ArrayList<objectAux> received = new ArrayList<>();
         InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
 
-        try( MulticastSocket socket = new MulticastSocket(port))
-            {
+        try (MulticastSocket socket = new MulticastSocket(port)) {
             socket.joinGroup(group);
             while (true) {
                 byte[] buffer = new byte[8192];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
-                
+
                 // Deserialze object
                 ByteArrayInputStream bais = new ByteArrayInputStream(buffer);
                 ObjectInputStream ois = new ObjectInputStream(bais);
@@ -199,99 +170,82 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
                     } else {
                         System.out.println("The received object is not of right type!");
                     }
-                 } catch (EOFException eof){
+                } catch (EOFException eof) {
                     System.out.println("ObjectInputStream is throwing EOFException");
                     continue;
 
-                 } catch (Exception e) {
-                    //e.printStackTrace();
+                } catch (Exception e) {
+                    // e.printStackTrace();
                     System.out.println("No object could be read from the received UDP datagram.");
                 }
 
-                //System.out.println("size of received = " + received.size());
-                
-                //System.out.println("size of index = " + index.size());
-                
+                if (obj != null) {
+                    if (obj.getType().equals("1")) {
 
-                if(obj != null)
-                {
-                    if (obj.getType().equals("1"))
-                    {
-
-                        objectAux newAux = new objectAux (obj.getId(), packet.getAddress(), packet.getPort(), obj.getWord_parts(),
-                        obj.getUrl_parts(), obj.getUrl(), obj.getTitulo(), obj.getCitacao());
+                        objectAux newAux = new objectAux(obj.getId(), packet.getAddress(), packet.getPort(),
+                                obj.getWord_parts(),
+                                obj.getUrl_parts(), obj.getUrl(), obj.getTitulo(), obj.getCitacao());
                         received.add(newAux);
-                        for (objectAux aux : received){
-                            if (packet.getAddress().equals(aux.getAdd()) &&  packet.getPort() == aux.getPORT()&& aux.getId() < obj.getId() - 1)
-                            {
+                        for (objectAux aux : received) {
+                            if (packet.getAddress().equals(aux.getAdd()) && packet.getPort() == aux.getPORT()
+                                    && aux.getId() < obj.getId() - 1) {
                                 received.remove(aux);
                                 break;
                             }
                         }
-                        //System.out.println("TYPE 1");
+                        // System.out.println("TYPE 1");
 
                     }
-                    if (obj.getType().equals("2"))
-                    {
-                        //System.out.println("TYPE 2");
-                        for (objectAux aux : received){
-                            if(packet.getAddress().equals(aux.getAdd()) && 
-                            packet.getPort() == aux.getPORT() && aux.getId() == obj.getId())
-                            {
-                                for ( String u : obj.getUrls())
-                                {
-                                    if (urlsIndex.containsKey(u)){
-                                        if(urlsIndex.get(u).contains(aux.getUrl()))
-                                            {
-                                                urlsIndex.get(u).add(aux.getUrl());
-                                            }
-                                    }
-                                    else{
+                    if (obj.getType().equals("2")) {
+                        // System.out.println("TYPE 2");
+                        for (objectAux aux : received) {
+                            if (packet.getAddress().equals(aux.getAdd()) &&
+                                    packet.getPort() == aux.getPORT() && aux.getId() == obj.getId()) {
+                                for (String u : obj.getUrls()) {
+                                    if (urlsIndex.containsKey(u)) {
+                                        if (!urlsIndex.get(u).contains(aux.getUrl())) {
+                                            urlsIndex.get(u).add(aux.getUrl());
+                                        }
+                                    } else {
                                         HashSet<String> set1 = new HashSet<>();
                                         set1.add(aux.getUrl());
                                         urlsIndex.put(u, set1);
                                     }
-                                    
+
                                 }
                             }
                         }
                     }
-                    if (obj.getType().equals("3"))
-                    {
-                        //System.out.println("TYPE 3");
-                        for (objectAux aux : received){
-                            if(packet.getAddress().equals(aux.getAdd()) && 
-                            packet.getPort() == aux.getPORT() && aux.getId() == obj.getId())
-                            {
-                                for ( String w : obj.getWords())
-                                {
+                    if (obj.getType().equals("3")) {
+                        // System.out.println("TYPE 3");
+                        for (objectAux aux : received) {
+                            if (packet.getAddress().equals(aux.getAdd()) &&
+                                    packet.getPort() == aux.getPORT() && aux.getId() == obj.getId()) {
+                                for (String w : obj.getWords()) {
                                     String cur = w.toLowerCase();
-                                    if (StopWords.contains(cur)){
+                                    if (StopWords.contains(cur)) {
                                         continue;
                                     }
-                                    if (index.containsKey(cur)){
+                                    if (index.containsKey(cur)) {
                                         boolean urlExists = false;
-                                        for (indexObject indexAux : index.get(cur))
-                                        {
-                                            if(indexAux.getUrl().equals(aux.getUrl()))
-                                            {
+                                        for (indexObject indexAux : index.get(cur)) {
+                                            if (indexAux.getUrl().equals(aux.getUrl())) {
                                                 urlExists = true;
                                                 break;
                                             }
                                         }
-                                        if(!urlExists)
-                                        {
-                                            indexObject objNew = new indexObject(obj.getUrl(), aux.getTitle(), aux.getCitacao(), 0);
+                                        if (!urlExists) {
+                                            indexObject objNew = new indexObject(obj.getUrl(), aux.getTitle(),
+                                                    aux.getCitacao(), 0);
                                             index.get(cur).add(objNew);
                                         }
-                                        
-                                    }
-                                    else{
+
+                                    } else {
                                         HashSet<indexObject> set1 = new HashSet<>();
                                         set1.add(new indexObject(obj.getUrl(), obj.getTitulo(), obj.getCitacao(), 0));
                                         index.put(cur, set1);
                                     }
-                                }   
+                                }
                             }
                         }
                     }
@@ -303,7 +257,7 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
         }
 
     }
-    
+
     // Mandar sinal de vida demonstrar que está ativo
     public class SendLifeProof implements Runnable {
         int port = 4323;
@@ -311,13 +265,11 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
         long SLEEP = 2000;
         int interfacePORT;
         String interfaceNAME;
-        
 
         public SendLifeProof(int interfacePORT, String interfaceNAME) {
             this.interfacePORT = interfacePORT;
             this.interfaceNAME = interfaceNAME;
         }
-
 
         @Override
         public void run() {
@@ -333,7 +285,7 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
                 while (true) {
 
                     DatagramPacket alivePacket = new DatagramPacket(alive.getBytes(), alive.length(), group, port);
-                    //System.out.println("Sending packets...");
+                    // System.out.println("Sending packets...");
                     socket.send(alivePacket);
 
                     Thread.sleep(SLEEP); // esperar 15 segundos
@@ -350,20 +302,17 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
         }
     }
 
-
     public ArrayList<indexObject> Search(String s) {
         // remove stop words
 
         String[] tokens = s.split("[\\s,]+");
         ArrayList<indexObject> results = new ArrayList<>();
-        for(var word: tokens)
-        {
-            
-            if (!(index.containsKey(word.toLowerCase()))) { //ver se as palavras foram indexadas
+        for (var word : tokens) {
+
+            if (!(index.containsKey(word.toLowerCase()))) { // ver se as palavras foram indexadas
 
                 System.out.println(word + ": not indexed");
-                //System.out.println(index.keySet());
-
+                // System.out.println(index.keySet());
 
                 return results;
             }
@@ -371,52 +320,44 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
         ;
         HashSet<indexObject> set1 = index.get(tokens[0].toLowerCase());
 
-        for(indexObject obj1 : set1)
-            {
+        for (indexObject obj1 : set1) {
             String currUrl = obj1.getUrl();
-            
+
             int k = 1;
-            for (int i = 1; i < tokens.length; i++)
-            {
-                for(indexObject obj2 : index.get(tokens[i].toLowerCase()))
-                {
-                    if((obj2.getUrl().equals(currUrl)))
-                    {
+            for (int i = 1; i < tokens.length; i++) {
+                for (indexObject obj2 : index.get(tokens[i].toLowerCase())) {
+                    if ((obj2.getUrl().equals(currUrl))) {
                         k++;
                         break;
                     }
                 }
             }
-            if (k == tokens.length)
-            {
-                indexObject uObject = new indexObject(currUrl, obj1.getTitulo(), obj1.getCitacao(), urlsIndex.get(currUrl).size());
+            if (k == tokens.length) {
+                indexObject uObject = new indexObject(currUrl, obj1.getTitulo(), obj1.getCitacao(),
+                        urlsIndex.get(currUrl).size());
                 results.add(uObject);
-         
+
             }
         }
         Comparator<indexObject> scoreComparator = Comparator.comparingInt(indexObject::getrelevance).reversed();
         Collections.sort(results, scoreComparator);
         System.out.println("Found results: " + results.size());
+
         return results;
     }
-    
 
-    public ArrayList<String> getLinks(String s) 
-    {
+    public ArrayList<String> getLinks(String s) {
         ArrayList<String> urls = new ArrayList<>();
         HashSet<String> set1 = new HashSet<>();
-        try{
-            set1 = urlsIndex.get(s);  
-        }
-        catch ( Exception e)
-        {
+        try {
+            set1 = urlsIndex.get(s);
+        } catch (Exception e) {
             System.out.println("Could not retrieve links.");
         }
-        if(set1.isEmpty()){
+        if (set1.isEmpty()) {
             return urls;
-        }
-        else{
-            for (String u : set1){
+        } else {
+            for (String u : set1) {
                 urls.add(u);
             }
         }
@@ -424,4 +365,3 @@ public class StorageBarrel extends UnicastRemoteObject implements StorageBarrel_
     }
 
 }
-

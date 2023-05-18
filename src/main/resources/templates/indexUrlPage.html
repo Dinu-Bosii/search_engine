@@ -1,30 +1,57 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Thymeleaf Template</title>
-    <link th:href="@{/main.css}" rel="stylesheet" />
-</head>
-<body>
-<div class="container">
-    <div class="menu">
-        <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/indexUrl">Index a Url</a></li>
-            <li><a href="#">Administration page</a></li>
-        </ul>
-    </div>
-    <div class="search-box">
-        <div class="logo">GOOGOL</div>
-        <form th:action="@{/indexUrl}" method="get" onsubmit="return validateForm()">
-            <input type="text" name="text" placeholder="Search..." />
-            <input type="submit" value="Search" />
-        </form>
-    </div>
-    <div class="login-button">
-        <button>Login</button>
-    </div>
-</div>
-<script>
+    <head>
+        <title>Thymeleaf Template</title>
+        <link th:href="@{/main.css}" rel="stylesheet" />
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+        $(document).ready(function() {
+            $('#indexForm').submit(function(event) {
+                event.preventDefault(); // Prevent the form from submitting normally
+                
+                var url = $('#urlInput').val(); // Get the value from the URL input field
+                
+                $.get('/indexUrl', { url: url }, function(response) {
+                    if (response.success === 'true' || response.success === true) {
+                        alert('Indexing the URL was successful!');
+                    } else {
+                        alert('Error indexing the URL. Please try again.');
+                    }
+                }).fail(function() {
+                    alert('An error occurred while processing the request.');
+                });
+            });
+        });
+    </script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="menu">
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/indexUrlPage">Index a Url</a></li>
+                    <li><a href="/admin">Administration page</a></li>
+                    <li><a href="/hackerNewsUser"> Hacker News User's Stories</a></li>
+                </ul>
+            </div>
+            <div class="search-box">
+                <div class="logo">GOOGOL</div>
+                <form id="indexForm" method="get">
+                    <input type="text" id="urlInput" name="url" placeholder="Url to Index..." />
+                    <input type="submit" value="Index" />
+                </form>
+                <!--<form th:action="@{/indexUrl/}" method="get" onsubmit="return
+                    validateForm()">
+                    <input type="text" name="text" id="urlInput" name="url"
+                        placeholder="Url to Index..." />
+                    <input type="submit" value="Index" />
+                </form>-->
+            </div>
+            <div class="login-button">
+                <button>Login</button>
+            </div>
+        </div>
+        <script>
     function validateForm(event) {
         var searchInput = document.getElementsByName('text')[0];
         if (searchInput.value.trim() === '') {
@@ -34,5 +61,5 @@
     }
     
 </script>
-</body>
+    </body>
 </html>

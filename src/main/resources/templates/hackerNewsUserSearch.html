@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <title>Getting Started: A table</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link th:href="@{/searchStyle.css}" rel="stylesheet" />
+
+    <body>
+      <div class="menu">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/indexUrlPage">Index a Url</a></li>
+          <li><a href="/admin">Administration page</a></li>
+          <li><a href="/hackerNewsUser"> Hacker News User's Stories</a></li>
+        </ul>
+      </div>
+      <div class="search-query" th:text="'Searching for stories that belong to: ' + ${user} "></div>
+    <div class="search-query" th:text="'Number of stories indexed: ' + ${storyUrls}"></div>
+  </body>
+  </html>

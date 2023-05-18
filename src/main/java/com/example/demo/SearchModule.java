@@ -1,4 +1,4 @@
-package meta1;
+package com.example.demo;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -22,12 +21,10 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import meta1.*;
 
-import com.example.demo.AdminObject;
-
+@Component
 public class SearchModule extends UnicastRemoteObject implements SearchModule_I {
-    static ArrayList<RMIClient_I> clients = new ArrayList<>(); // para vários clientes
-    static ArrayList<profile> clients_registered = new ArrayList<>();
     private static final String MULTICAST_DOWN = "224.3.2.2";
     private static int PORT_d = 4322;
     private static final String MULTICAST_BARREL = "224.3.2.3";
@@ -37,13 +34,9 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
     private static final Random rand = new Random();
     private static final long SLEEP_TIME_ACTIVE = 2000;
     private static int PAGE_SIZE = 10;
-    private static int ID = 0;
-    private static final long SLEEP = 5000;
+    private static final long SLEEP = 2000;
     private static AdminObject currentStats;
-    @Autowired
-    private static SimpMessagingTemplate messagingTemplate;
     static Map<String, Integer> Searches = new HashMap<>();
-
 
     protected SearchModule() throws RemoteException {
         super();
@@ -64,22 +57,21 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
+
         Runnable run = () -> {
-            try{    
+            try {
+
                 while (true) {
                     AdminObject checkStats = info();
-                    if (currentStats != checkStats){
+                    if (!currentStats.equals(checkStats)) {
                         currentStats = checkStats;
-                        //send to Websocket
-                        messagingTemplate.convertAndSend("/topic/adminStats", currentStats);
+                        System.out.println("Admin info updated.");
+
                     }
                     Thread.sleep(SLEEP);
                 }
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 System.out.println(e.getMessage());
-                //e.printStackTrace();
             } finally {
                 Thread.currentThread().interrupt();
             }
@@ -89,14 +81,14 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
     }
 
     public boolean indexURL(String s) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
-        try{
-             InterfaceRMI q = (InterfaceRMI) Naming.lookup("queue");
+        try {
+            InterfaceRMI q = (InterfaceRMI) Naming.lookup("queue");
             q.addUrl(s);
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
+        System.out.println("added to queue: " + s);
         return true;
     }
 
@@ -126,15 +118,13 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
                 while (true) {
                     byte[] buffer = new byte[1024];
 
-                    //System.out.println("waiting for packets...");
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     socket.receive(packet);
                     String data = new String(packet.getData(), 0, packet.getLength());
                     String[] parts = data.split(":");
-                    //System.out.println(data);
                     int porto = Integer.parseInt(parts[0]);
-                   
-                    //System.out.println("barrel:" + packet.getAddress() + ":" + packet.getPort());
+
+                    // System.out.println("barrel:" + packet.getAddress() + ":" + packet.getPort());
                     boolean exists = false;
 
                     for (AliveObject ao : this.aliveArray) {
@@ -194,11 +184,10 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
 
     }
 
-
     public static AdminObject info() {
-        //subscribe the client
+        // subscribe the client
 
-        //----------------------------------Obter Top 10 pesquisas
+        // ----------------------------------Obter Top 10 pesquisas
         List<Map.Entry<String, Integer>> topSearches = new ArrayList<>(Searches.entrySet());
         Collections.sort(topSearches, (e1, e2) -> e2.getValue().compareTo(e1.getValue()));
         List<Map.Entry<String, Integer>> top10Searches = topSearches.subList(0, Math.min(10, topSearches.size()));
@@ -209,110 +198,72 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
 
         checkBarrels();
         checkDownloaders();
-        
+
         ArrayList<String> adminDownloaders = new ArrayList<>();
         ArrayList<String> adminBarrels = new ArrayList<>();
-        for(AliveObject d : downloaders)
-        {
+        for (AliveObject d : downloaders) {
             adminDownloaders.add("IP:" + d.getIp() + "|PORT:" + d.getPort());
         }
-        for(AliveObject b : barrels)
-        {
+        for (AliveObject b : barrels) {
             adminBarrels.add("IP:" + b.getIp() + "|PORT:" + b.getPort());
         }
 
         return new AdminObject(top10Admin, adminBarrels, adminDownloaders);
-        
+
     }
 
+    public AdminObject AdminInfo() throws RemoteException, MalformedURLException, NotBoundException {
+        return currentStats;
+    }
 
-    public ArrayList<indexObject> GoogolSearch(String s, int id, int page) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
-        // check if there are Barrels active
+    public ArrayList<indexObject> GoogolSearch(String s, int page)
+            throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
         System.out.println("Searching for: " + s);
-        
-        /*if (id != 0 && searchResults.containsKey(id)){
-            if (searchResults.get(id).size() >= 10) {
-                return new ArrayList<indexObject>(searchResults.get(id).subList(page * PAGE_SIZE, (page + 1) * PAGE_SIZE));
-            } else {
-               return new ArrayList<indexObject>(searchResults.get(id));
-            }
-            //return new ArrayList<indexObject>(searchResults.get(id).subList(page * PAGE_SIZE, (page + 1) * PAGE_SIZE));
-            
-        }*/
+        Searches.compute(s, (key, value) -> (value == null) ? 1 : value + 1);
+
+        // check if there are Barrels active
         if (!checkBarrels()) {
             System.out.println("No Storage Barrel active. Try again later.");
-            return null;
+            return new ArrayList<>();
         }
         int max = barrels.size();
-        
+
         int chosenBarrel;
-        if(max == 1)
-        {
+        if (max == 1) {
             chosenBarrel = 1;
-        }
-        else{
+        } else {
             chosenBarrel = rand.nextInt(max);
         }
-        System.out.println("barrel chosen = " + chosenBarrel + ", and there are " + max);
         int barrelPort = 0;
-        try{
+        try {
             AliveObject b = barrels.get(chosenBarrel - 1);
             barrelPort = b.getPort();
             System.out.println("barrel port " + barrelPort);
-        } catch ( Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         Registry registry = LocateRegistry.getRegistry(barrelPort);
         StorageBarrel_I brInter = (StorageBarrel_I) registry.lookup("StorageBarrel" + barrelPort);
         ArrayList<indexObject> results = null;
-        try
-        {
-            results =  brInter.Search(s);
-        }catch (RemoteException re){
-            //retry with another barrel if there is one
-            /*if(checkBarrels()){
-                for (AliveObject barrel : barrels)
-                {
-                    if(barrel.getPort() != barrelPort)
-                    {
-                        try{
-                            barrelPort = barrel.getPort();
-                            System.out.println("barrel port " + barrelPort);
-                        } catch ( Exception e)
-                        {
-                            e.printStackTrace();
-                        }
-                
-                        registry = LocateRegistry.getRegistry(barrelPort);
-                        brInter = (StorageBarrel_I) registry.lookup("StorageBarrel" + barrelPort);
-                        try
-                        {
-                            results =  brInter.Search(s);
-                        } catch (Exception e){
-                            continue;
-                        }
-                    }
-                }
-            } */
-        }
-        catch (Exception e2)
-        {
+        try {
+            results = brInter.Search(s);
+        } catch (RemoteException re) {
+            System.out.println("RemoteException.");
+        } catch (Exception e2) {
             e2.printStackTrace();
             System.out.println("Error while searching.");
         }
         ArrayList<indexObject> results_10 = new ArrayList<>();
-        if(results == null)
-        {
+        if (results == null) {
             System.out.println("not indexed");
-        }
-        else if(results.isEmpty()){
+        } else if (results.isEmpty()) {
             System.out.println("No results found.");
-        }
-        else{     
+        } else {
 
-            results_10 = new ArrayList<indexObject>(results.subList(0, Math.min(10, results.size())));
+            results_10 = new ArrayList<indexObject>(
+                    results.subList(Math.min(PAGE_SIZE * page, results.size()),
+                            Math.min(PAGE_SIZE * (page + 1), results.size())));
 
             System.out.println("Found results: " + results.size());
         }
@@ -320,7 +271,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
         return results_10;
     }
 
-    
     public ArrayList<String> links(String s) throws java.rmi.RemoteException, MalformedURLException, NotBoundException {
         // check if there are Barrels active
         System.out.println("Searching links for...");
@@ -329,54 +279,37 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
             return new ArrayList<>();
         }
         int max = barrels.size();
-        
+
         int chosenBarrel;
-        if(max == 1)
-        {
+        if (max == 1) {
             chosenBarrel = 1;
-        }
-        else{
+        } else {
             chosenBarrel = rand.nextInt(max);
         }
         System.out.println("barrel chosen for searching links: " + chosenBarrel);
         int barrelPort = 0;
-        try{
+        try {
             AliveObject b = barrels.get(chosenBarrel - 1);
             barrelPort = b.getPort();
-        } catch ( Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         Registry registry = LocateRegistry.getRegistry(barrelPort);
         StorageBarrel_I brInter = (StorageBarrel_I) registry.lookup("StorageBarrel" + barrelPort);
         ArrayList<String> results = new ArrayList<String>();
-        try
-        {
-            results =  brInter.getLinks(s);
-        }catch (RemoteException re){
-            //retry with another barrel if there is one
-            
-        }
-        catch (Exception e2)
-        {
+        try {
+            results = brInter.getLinks(s);
+        } catch (RemoteException re) {
+            // retry with another barrel if there is one
+
+        } catch (Exception e2) {
             e2.printStackTrace();
             System.out.println("Error while searching.");
         }
-        /*/
-        if(results.isEmpty())
-        {
-            return new ArrayList<>();;
-        }
-        else{
-            for(String st : results){
-                c.printOnClient("url:" + st);
-            }
-        }*/
 
         return results;
     }
-
 
     public static boolean checkBarrels() {
         boolean flag = false;
@@ -385,24 +318,22 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
             LocalTime currentTime = LocalTime.now();
             LocalTime barrelTime = obj.getTime();
 
-            if (barrelTime.plusSeconds(SLEEP_TIME_ACTIVE/1000).isAfter(currentTime)) {
-                //System.out.println( "barrel:" + barrelTime + ", current:" + currentTime);
+            if (barrelTime.plusSeconds(SLEEP_TIME_ACTIVE / 1000).isAfter(currentTime)) {
+                // System.out.println( "barrel:" + barrelTime + ", current:" + currentTime);
                 flag = true;
             } else {
                 toRemove.add(obj);
 
             }
-            
+
         }
-    
-        for (AliveObject dead : toRemove)
-        {
-            System.out.println("removing :" + dead.getPort());
+
+        for (AliveObject dead : toRemove) {
+            // System.out.println("removing :" + dead.getPort());
             barrels.remove(dead);
         }
         return flag;
     }
-    
 
     public static boolean checkDownloaders() {
         boolean flag = false;
@@ -411,67 +342,17 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_I 
             LocalTime currentTime = LocalTime.now();
             LocalTime DownloaderTime = obj.getTime();
 
-            if (DownloaderTime.plusSeconds(SLEEP_TIME_ACTIVE/1000).isAfter(currentTime)) {
-                System.out.println( "barrel:" + DownloaderTime + ", current:" + currentTime);
+            if (DownloaderTime.plusSeconds(SLEEP_TIME_ACTIVE / 1000).isAfter(currentTime)) {
+                // System.out.println( "barrel:" + DownloaderTime + ", current:" + currentTime);
                 flag = true;
-            } 
-            else {
+            } else {
                 toRemove.add(obj);
             }
         }
-        for (AliveObject dead : toRemove)
-        {
+        for (AliveObject dead : toRemove) {
             downloaders.remove(dead);
         }
         return flag;
     }
-    
-    public class profile {
-        String username;
-        String password;
-        public profile(String username, String password) {
-            this.username = username;
-            this.password = password;
-        }
-        public String getUsername() {
-            return username;
-        }
-        public void setUsername(String username) {
-            this.username = username;
-        }
-        public String getPassword() {
-            return password;
-        }
-        public void setPassword(String password) {
-            this.password = password;
-        }
-    }
-    
 
-    public boolean login(String username, String password)
-    {
-        for(profile us : clients_registered)
-        {
-            if (us.getUsername().equals(username) && us.getPassword().equals(password))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    
-    public boolean register(String username, String password)
-    {
-        for(profile us : clients_registered)
-        {
-            if (us.getUsername().equals(username))
-            {
-                return false;
-            }
-        }
-        profile newProfile = new profile(username, password);
-        clients_registered.add(newProfile);
-        return true;
-    }
 }
